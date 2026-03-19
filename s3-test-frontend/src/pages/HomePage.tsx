@@ -2,8 +2,30 @@ import { useEffect, useState } from 'react'
 
 interface MediaItem {
   id: number
+  mediaKey: string
+  mediaType: string
+  mediaUrl: string
   title: string
-  videoUrl: string
+  description: string | null
+  thumbnailUrl: string | null
+  createdAt: string
+}
+
+function renderMedia(item: MediaItem) {
+  if (item.mediaType.startsWith('video/')) {
+    return <video className="media-player" src={item.mediaUrl} poster={item.thumbnailUrl ?? undefined} controls preload="metadata" />
+  }
+
+  if (item.mediaType.startsWith('audio/')) {
+    return (
+      <div className="audio-frame">
+        {item.thumbnailUrl ? <img src={item.thumbnailUrl} alt={item.title} className="audio-thumbnail" /> : <div className="audio-placeholder">Audio</div>}
+        <audio className="audio-player" src={item.mediaUrl} controls preload="metadata" />
+      </div>
+    )
+  }
+
+  return <img className="media-image" src={item.mediaUrl} alt={item.title} loading="lazy" />
 }
 
 export default function HomePage() {
@@ -15,12 +37,9 @@ export default function HomePage() {
     const loadMedia = async () => {
       try {
         setLoading(true)
-        setError(null)
-
         const response = await fetch('/api/media')
         if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as { error?: string } | null
-          throw new Error(payload?.error || 'Unable to load media items.')
+          throw new Error('Unable to load media items.')
         }
 
         const items = (await response.json()) as MediaItem[]
@@ -46,28 +65,27 @@ export default function HomePage() {
   if (media.length === 0) {
     return (
       <section className="panel state-panel">
-        <h2>No videos found</h2>
-        <p>Upload a video first. Private S3 files will be played through secure presigned GET URLs.</p>
+        <h2>No uploads yet</h2>
+        <p>Use the Upload page to add your first image, video, or audio entry.</p>
       </section>
     )
   }
 
   return (
     <section className="media-grid">
-      {media.map(({ id, title, videoUrl }) => (
-        <article className="media-card panel" key={id}>
-          <div className="media-preview">
-            <video controls width="400" className="media-player">
-              <source src={videoUrl} type="video/mp4" />
-            </video>
-          </div>
+      {media.map((item) => (
+        <article className="media-card panel" key={item.id}>
+          <div className="media-preview">{renderMedia(item)}</div>
           <div className="card-body">
             <div className="card-heading">
-              <h2>{title}</h2>
+              <h2>{item.title}</h2>
+              <span className="badge">{item.mediaType}</span>
             </div>
+            <p>{item.description || 'No description provided.'}</p>
             <div className="meta-row">
-              <a href={videoUrl} target="_blank" rel="noreferrer">
-                Open secure stream
+              <span className="mono">{new Date(item.createdAt).toLocaleString()}</span>
+              <a href={item.mediaUrl} target="_blank" rel="noreferrer">
+                Open file
               </a>
             </div>
           </div>

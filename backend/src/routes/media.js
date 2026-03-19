@@ -1,7 +1,7 @@
 const express = require('express');
 
 const { checkDatabaseConnection, getLastConnectionError, query } = require('../db');
-const { createDownloadUrl, createUploadUrl } = require('../s3');
+const { buildS3Url, createUploadUrl } = require('../s3');
 
 const router = express.Router();
 
@@ -34,7 +34,13 @@ router.get('/upload-url', async (req, res, next) => {
 
 router.post('/save', async (req, res, next) => {
   try {
-    const { mediaKey, mediaType, title, description, thumbnailKey } = req.body;
+    const {
+      mediaKey,
+      mediaType,
+      title,
+      description,
+      thumbnailKey
+    } = req.body;
 
     if (!mediaKey || !mediaType || !title) {
       const error = new Error('mediaKey, mediaType, and title are required.');
@@ -55,6 +61,9 @@ router.post('/save', async (req, res, next) => {
 
     res.status(201).json({
       id: result.insertId,
+      mediaKey,
+      mediaUrl: buildS3Url(mediaKey),
+      thumbnailUrl: thumbnailKey ? buildS3Url(thumbnailKey) : null,
       success: true
     });
   } catch (error) {
@@ -65,20 +74,25 @@ router.post('/save', async (req, res, next) => {
 router.get('/media', async (_req, res, next) => {
   try {
     const [rows] = await query(
-      `SELECT id, title, media_key AS mediaKey
-       FROM s3_media_test
-       ORDER BY created_at DESC, id DESC`
+      `SELECT
+        id,
+        media_key AS mediaKey,
+        media_type AS mediaType,
+        title,
+        description,
+        thumbnail_key AS thumbnailKey,
+        created_at AS createdAt
+      FROM s3_media_test
+      ORDER BY created_at DESC, id DESC`
     );
 
-    const items = await Promise.all(
-      rows.map(async (row) => ({
-        id: row.id,
-        title: row.title,
-        videoUrl: await createDownloadUrl(row.mediaKey)
+    res.json(
+      rows.map((row) => ({
+        ...row,
+        mediaUrl: buildS3Url(row.mediaKey),
+        thumbnailUrl: row.thumbnailKey ? buildS3Url(row.thumbnailKey) : null
       }))
     );
-
-    res.json(items);
   } catch (error) {
     next(error);
   }
