@@ -1,6 +1,4 @@
-const loadEnv = require('./loadEnv');
-
-loadEnv();
+require('dotenv').config();
 
 const fs = require('fs');
 const mysql = require('mysql2/promise');

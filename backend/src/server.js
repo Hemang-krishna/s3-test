@@ -1,6 +1,4 @@
-const loadEnv = require('./loadEnv');
-
-loadEnv();
+require('dotenv').config();
 
 const cors = require('cors');
 const express = require('express');
@@ -8,18 +6,8 @@ const express = require('express');
 const mediaRoutes = require('./routes/media');
 const { checkDatabaseConnection } = require('./db');
 
-function resolvePort(value, fallback = 7000) {
-  const parsed = Number.parseInt(String(value || fallback), 10);
-  if (Number.isInteger(parsed) && parsed >= 0 && parsed <= 65535) {
-    return parsed;
-  }
-
-  console.warn(`[server] Invalid PORT value "${value}". Falling back to ${fallback}.`);
-  return fallback;
-}
-
 const app = express();
-const port = resolvePort(process.env.PORT, 7000);
+const port = Number(process.env.PORT || 7000);
 const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((value) => value.trim()) : true;
 
 app.use(cors({ origin: allowedOrigins }));

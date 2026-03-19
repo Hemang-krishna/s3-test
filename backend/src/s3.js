@@ -1,6 +1,4 @@
-const loadEnv = require('./loadEnv');
-
-loadEnv();
+require('dotenv').config();
 
 const crypto = require('crypto');
 
