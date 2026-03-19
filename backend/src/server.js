@@ -7,7 +7,7 @@ const mediaRoutes = require('./routes/media');
 const { checkDatabaseConnection } = require('./db');
 
 const app = express();
-const port = Number(process.env.PORT || 7000);
+const port = Number(process.env.PORT || 7100);
 const allowedOrigins = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map((value) => value.trim()) : true;
 
 app.use(cors({ origin: allowedOrigins }));
