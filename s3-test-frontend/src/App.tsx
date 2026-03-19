@@ -1,64 +1,32 @@
-import { useState, useEffect } from "react";
-//import "./App.css";
+import './App.css'
+import HomePage from './pages/HomePage'
+import UploadPage from './pages/UploadPage'
+import { NavLink, Route, Routes } from './router'
 
-interface Media {
-  id: string;
-  media_type: string;
-  url: string;
-}
-
-export default function S3Test() {
-  const [file, setFile] = useState<File | null>(null);
-  const [media, setMedia] = useState<Media[]>([]);
-
-  const loadMedia = async () => {
-    const res = await fetch("http://localhost:7000/media");
-    setMedia(await res.json());
-  };
-
-  useEffect(() => {
-    loadMedia();
-  }, []);
-
-  const upload = async () => {
-    if (!file) return;
-
-    const res = await fetch(
-      `http://localhost:7000/upload-url?name=${file.name}&type=${file.type}`
-    );
-    const data = await res.json();
-
-    await fetch(data.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": file.type },
-      body: file
-    });
-
-    await fetch("http://localhost:7000/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: data.key, type: file.type })
-    });
-
-    loadMedia();
-  };
-
+export default function App() {
   return (
-    <div>
-      <input type="file" onChange={e => setFile(e.target.files?.[0] || null)} />
-      <button onClick={upload}>Upload</button>
-
-      {media.map(m => (
-        <div key={m.id}>
-          {m.media_type.startsWith("image") && <img src={m.url} width={200} />}
-          {m.media_type.startsWith("video") && (
-            <video src={m.url} width={300} controls />
-          )}
-          {m.media_type.startsWith("audio") && (
-            <audio src={m.url} controls />
-          )}
+    <div className="app-shell">
+      <header className="topbar">
+        <div>
+          <p className="eyebrow">Minimal S3 media upload test</p>
+          <h1>S3 Media Studio</h1>
+          <p className="subtle">
+            Upload media to S3 with pre-signed URLs, save metadata to MySQL, and preview everything locally.
+          </p>
         </div>
-      ))}
+        <nav className="nav-tabs" aria-label="Main navigation">
+          <NavLink to="/">Home</NavLink>
+          <NavLink to="/upload">Upload</NavLink>
+        </nav>
+      </header>
+
+      <main className="page-content">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="*" element={<HomePage />} />
+        </Routes>
+      </main>
     </div>
-  );
+  )
 }
