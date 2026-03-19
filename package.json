@@ -8,9 +8,16 @@
     "start": "node backend/src/server.js",
     "test:db": "node -e \"require('./backend/src/db').checkDatabaseConnection().then((result)=>{console.log(JSON.stringify(result,null,2));process.exit(result.ok?0:1);})\""
   },
-  "keywords": ["express", "mysql", "s3", "upload"],
+  "keywords": [
+    "express",
+    "mysql",
+    "s3",
+    "upload"
+  ],
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1012.0",
+    "@aws-sdk/s3-request-presigner": "^3.1012.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
