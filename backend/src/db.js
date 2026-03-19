@@ -1,6 +1,4 @@
-const loadEnv = require('./loadEnv');
-
-loadEnv();
+require('dotenv').config();
 
 const fs = require('fs');
 const mysql = require('mysql2/promise');
@@ -13,22 +11,6 @@ let initializationPromise;
 let lastConnectionError = null;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function getMissingDatabaseConfig() {
-  return ['DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME']
-    .filter((key) => !process.env[key]);
-}
-
-function buildDatabaseConfigError() {
-  const missing = getMissingDatabaseConfig();
-  if (missing.length === 0) {
-    return null;
-  }
-
-  const error = new Error(`Missing required database environment variables: ${missing.join(', ')}`);
-  error.code = 'DB_CONFIG_MISSING';
-  return error;
-}
 
 function buildSslConfig() {
   if (String(process.env.DB_SSL).toLowerCase() !== 'true') {
@@ -64,13 +46,6 @@ function createPool() {
 }
 
 async function initializePool() {
-  const configError = buildDatabaseConfigError();
-  if (configError) {
-    lastConnectionError = configError;
-    console.error(`[db] ${configError.message}`);
-    throw configError;
-  }
-
   let attempt = 0;
   let mostRecentError;
 
@@ -89,7 +64,7 @@ async function initializePool() {
     } catch (error) {
       mostRecentError = error;
       lastConnectionError = error;
-      console.error(`[db] Connection attempt ${attempt} failed: ${error.message || error.code || 'Unknown database error'}`);
+      console.error(`[db] Connection attempt ${attempt} failed: ${error.message}`);
       if (attempt < DEFAULT_RETRY_ATTEMPTS) {
         await sleep(DEFAULT_RETRY_DELAY_MS);
       }
@@ -121,7 +96,7 @@ async function query(sql, params = []) {
     return await activePool.execute(sql, params);
   } catch (error) {
     lastConnectionError = error;
-    console.error('[db] Query failed:', error.message || error.code || 'Unknown database error');
+    console.error('[db] Query failed:', error.message);
     const friendlyError = new Error('Database is temporarily unavailable. Please try again shortly.');
     friendlyError.statusCode = 503;
     friendlyError.code = 'DB_UNAVAILABLE';
@@ -142,7 +117,7 @@ async function checkDatabaseConnection() {
     return {
       ok: false,
       message: 'Database connection unavailable',
-      details: error.message || error.code || 'Unknown database error'
+      details: error.message
     };
   }
 }

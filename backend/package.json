@@ -7,11 +7,5 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test:db": "node -e \"require('./src/db').checkDatabaseConnection().then((result)=>{console.log(JSON.stringify(result,null,2));process.exit(result.ok?0:1);})\""
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "mysql2": "^3.15.3"
   }
 }

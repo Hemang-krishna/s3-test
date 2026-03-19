@@ -12,8 +12,7 @@ function loadEnv() {
     path: [
       path.resolve(__dirname, '../.env'),
       path.resolve(__dirname, '../../.env')
-    ],
-    quiet: true
+    ]
   });
 
   loaded = true;
